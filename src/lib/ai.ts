@@ -6,20 +6,23 @@ if (!apiKey) {
 }
 const genAI = new GoogleGenerativeAI(apiKey);
 
-export async function getAIResponse(prompt: string, history: any[] = []) {
-  const baseModels = ["gemini-3.1-flash-lite-preview", "gemini-1.5-flash", "gemini-pro"];
-  const models: string[] = [];
-  baseModels.forEach(m => {
-    models.push(m);
-    models.push(`models/${m}`);
-  });
+export async function getAIResponse(prompt: string, history: { role: string, content: string }[] = []) {
+  const models = [
+    "gemini-2.0-flash",
+    "gemini-flash-latest",
+    "gemini-pro-latest",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro"
+  ];
 
-  let lastError = null;
+
+  let lastError: Error | null = null;
 
   for (const modelName of models) {
     try {
-      console.log(`Trying model: ${modelName}`);
+      console.log(`[AI] Attempting with model: ${modelName}`);
       const model = genAI.getGenerativeModel({ model: modelName });
+      
       const systemPrompt = "You are H-STUDIO. Answer as briefly as possible. Use LaTeX for math. Be ultra-fast.";
       
       const formattedPrompt = history.length === 0 
@@ -28,12 +31,27 @@ export async function getAIResponse(prompt: string, history: any[] = []) {
 
       const result = await model.generateContent(formattedPrompt);
       const response = await result.response;
-      return response.text();
-    } catch (error: any) {
-      console.warn(`Model ${modelName} failed: ${error.message}`);
-      lastError = error;
+      const text = response.text();
+      console.log(`[AI] Success with ${modelName}`);
+      return text;
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error(`[AI] Model ${modelName} failed:`, err.message);
+      lastError = err;
+      
+      if (err.message?.includes("429") || err.message?.includes("quota")) {
+        console.error("[AI] Quota exceeded.");
+      }
     }
   }
 
-  throw lastError || new Error("All AI models failed to respond.");
+
+  const errorMessage = lastError?.message || "All AI models failed.";
+  console.error("[AI] Final Error:", errorMessage);
+  
+  if (errorMessage.includes("429") || errorMessage.includes("quota")) {
+    throw new Error("API Quota Exceeded. Please try again later.");
+  }
+  
+  throw new Error(`AI Service Error: ${errorMessage}`);
 }

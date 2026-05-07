@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { type User } from "@supabase/supabase-js";
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -19,25 +20,12 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [recentChats, setRecentChats] = useState<any[]>([]);
+  const [recentChats, setRecentChats] = useState<{ id: string; title: string }[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-      } else {
-        setUser(user);
-        fetchRecentChats();
-      }
-    };
-    checkUser();
-  }, [router]);
-
-  const fetchRecentChats = async () => {
+  const fetchRecentChats = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("chats")
@@ -51,7 +39,20 @@ export default function DashboardLayout({
     } catch (error) {
       console.error("Error fetching chats:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login");
+      } else {
+        setUser(user);
+        fetchRecentChats();
+      }
+    };
+    checkUser();
+  }, [router, fetchRecentChats]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

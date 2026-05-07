@@ -1,20 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import { MessageSquare, Code, Trash2, Calendar, ExternalLink } from "lucide-react";
+import { MessageSquare, Trash2, Calendar, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function HistoryPage() {
-  const [chats, setChats] = useState<any[]>([]);
+  const [chats, setChats] = useState<{ id: string; title: string; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -32,7 +28,12 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchHistory();
+  }, [fetchHistory]);
 
   const deleteChat = async (id: string) => {
     if (!confirm("Are you sure you want to delete this chat?")) return;
@@ -40,7 +41,7 @@ export default function HistoryPage() {
       const { error } = await supabase.from("chats").delete().eq("id", id);
       if (error) throw error;
       setChats(chats.filter(c => c.id !== id));
-    } catch (error) {
+    } catch {
       alert("Failed to delete chat");
     }
   };

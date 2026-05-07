@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, Code, FolderTree, Rocket, Loader2 } from "lucide-react";
+import { PlusCircle, FolderTree, Rocket, Loader2 } from "lucide-react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 

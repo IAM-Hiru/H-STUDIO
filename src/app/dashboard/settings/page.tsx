@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { User, Shield, Bell, Moon, Sun, Save, Loader2 } from "lucide-react";
+import { User, Shield, Bell, Moon, Save, Loader2 } from "lucide-react";
+import { type User as SupabaseUser } from "@supabase/supabase-js";
 
 export default function SettingsPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
@@ -28,8 +29,9 @@ export default function SettingsPage() {
       });
       if (error) throw error;
       alert("Settings saved!");
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An error occurred";
+      alert(message);
     } finally {
       setSaving(false);
     }

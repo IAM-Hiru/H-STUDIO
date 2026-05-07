@@ -1,10 +1,15 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 async function test() {
-  const apiKey = "AIzaSyDW7OuIliiJtrc3qWb9JumfUrhDK7Cp_uI";
+  const apiKey = process.env.GEMINI_API_KEY;
+  console.log("Using API Key:", apiKey);
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY not found in .env.local");
+    return;
+  }
   const genAI = new GoogleGenerativeAI(apiKey);
   
-  const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-pro"];
+  const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
   
   console.log("--- START DIAGNOSTIC ---");
   for (const modelName of models) {

@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function ChatHistoryPage() {
   const { id } = useParams();
-  const [initialMessages, setInitialMessages] = useState<any[]>([]);
+  const [initialMessages, setInitialMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function ChatHistoryPage() {
           .order("created_at", { ascending: true });
 
         if (error) throw error;
-        setInitialMessages(data.map((m: any) => ({ role: m.role, content: m.content })));
+        setInitialMessages(data.map((m: { role: "user" | "assistant"; content: string }) => ({ role: m.role, content: m.content })));
       } catch (error) {
         console.error("Error loading chat:", error);
       } finally {
